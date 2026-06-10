@@ -5,16 +5,13 @@ const ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJNYXBDbGFpbXMiOnsiY
 const WEIGHT = { Placement: 3, Result: 2, Event: 1 };
 
 export async function fetchNotifications(params = {}) {
-  await Log("frontend", "info", "api", "Fetching notifications");
-  const url = new URL("http://4.224.186.213/evaluation-service/notifications");
+  await Log("frontend", "info", "api", "Fetching notifications (proxied)");
+  const url = new URL("/api/notifications", "http://localhost:3000");
   if (params.limit) url.searchParams.set("limit", params.limit);
   if (params.page) url.searchParams.set("page", params.page);
   if (params.notification_type) url.searchParams.set("notification_type", params.notification_type);
 
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${ACCESS_TOKEN}` },
-    cache: "no-store",
-  });
+  const res = await fetch(url.toString(), { cache: "no-store" });
 
   if (!res.ok) {
     await Log("frontend", "error", "api", `Notifications fetch failed: ${res.status}`);
@@ -22,8 +19,8 @@ export async function fetchNotifications(params = {}) {
   }
 
   const data = await res.json();
-  await Log("frontend", "info", "api", `Fetched ${data.notifications.length} notifications`);
-  return data.notifications;
+  await Log("frontend", "info", "api", `Fetched ${data.notifications?.length || 0} notifications`);
+  return data.notifications || [];
 }
 
 export function getPriorityNotifications(notifications, n = 10) {
